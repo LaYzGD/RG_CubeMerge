@@ -9,15 +9,14 @@ namespace Game.Core
             Value = value;
         }
 
-        public bool CanMerge(IMergeable other, float impulse)
+        public bool CanMerge(IMergeable other)
         {
-            if (other is not EntityModel e)
+            if (other is not EntityModel)
             {
                 return false;
             }
 
-            //change magic number to config.impulse
-            return e.Value == Value && impulse >= 2f;
+            return other.Value == Value;
         }
 
         public int MergeResult()

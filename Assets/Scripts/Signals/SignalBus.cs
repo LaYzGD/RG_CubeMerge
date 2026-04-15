@@ -7,11 +7,11 @@ namespace Game.Signals
 {
     public class SignalBus
     {
-        private Dictionary<string, List<object>> _signalCallbacks = new Dictionary<string, List<object>>();
+        private Dictionary<Type, List<Delegate>> _signalCallbacks = new Dictionary<Type, List<Delegate>>();
 
         public void Subscribe<T>(Action<T> callback, int priority = 0)
         {
-            string key = typeof(T).Name;
+            Type key = typeof(T);
 
             if (_signalCallbacks.ContainsKey(key))
             {
@@ -19,12 +19,12 @@ namespace Game.Signals
                 return;
             }
 
-            _signalCallbacks.Add(key, new List<object>() { callback });
+            _signalCallbacks.Add(key, new List<Delegate>() { callback });
         }
 
         public void Invoke<T>(T signal)
         {
-            string key = typeof(T).Name;
+            Type key = typeof(T);
             if (_signalCallbacks.ContainsKey(key))
             {
                 foreach (var obj in _signalCallbacks[key])
@@ -37,7 +37,7 @@ namespace Game.Signals
 
         public void Unsubscribe<T>(Action<T> callback)
         {
-            string key = typeof(T).Name;
+            Type key = typeof(T);
             if (_signalCallbacks.ContainsKey(key))
             {
                 var callbackToDelete = _signalCallbacks[key].FirstOrDefault(x => x.Equals(callback));

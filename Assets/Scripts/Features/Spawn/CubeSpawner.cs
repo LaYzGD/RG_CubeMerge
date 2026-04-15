@@ -1,31 +1,49 @@
+using System;
 using Game.Configs;
 using Game.Core;
 using Game.Infrastructure;
+using Game.Signals;
 using UnityEngine;
 
 namespace Game.Features.Spawn
 {
-    public class CubeSpawner : IEntitySpawnService<CubeView>
+    public class CubeSpawner : IEntitySpawnService<CubeView>, IDisposable
     {
         private CubeViewPool _pool;
         private SpawnConfig _spawnConfig;
         private EntityConfig _entityConfig;
+        private SignalBus _bus;
         
-        public CubeSpawner(SpawnConfig spawnConfig, EntityConfig config, CubeView prefab) 
+        public CubeSpawner(SignalBus bus, SpawnConfig spawnConfig, EntityConfig config, CubeView prefab) 
         {
+            _bus = bus;
             _spawnConfig = spawnConfig;
             _entityConfig = config;
             _pool = new CubeViewPool(prefab);
+
+            _bus.Subscribe<CreateMergedEntitySignal>(SpawnMergedCube);
         }
 
-        public CubeView Spawn(int value, Vector3 pos)
+        public CubeView Spawn(Vector3 pos)
         {
-            var model = GetModel(_spawnConfig);
-            var view = _pool.GetObject();
-
-            view.Init(model);
-            view.SetNewValue(new EntityData(value, GetColor(_entityConfig, value)));
+            var view = GetViewAndBindModel(GetModel(_spawnConfig));
             view.transform.position = pos;
+
+            return view;
+        }
+
+        private void SpawnMergedCube(CreateMergedEntitySignal signal)
+        {
+            var view = GetViewAndBindModel(new EntityModel(signal.Value));
+            view.transform.position = signal.Position;
+        }
+
+        private CubeView GetViewAndBindModel(IMergeable model)
+        {
+            var view = _pool.GetObject();
+            view.Init(model);
+            view.SetBus(_bus);
+            view.SetNewValue(new EntityData(model.Value, GetColor(_entityConfig, model.Value)));
 
             return view;
         }
@@ -57,7 +75,7 @@ namespace Game.Features.Spawn
             return index;
         }
 
-        private EntityModel GetModel(SpawnConfig config)
+        private IMergeable GetModel(SpawnConfig config)
         {
             float totalChance = 0f;
 
@@ -66,7 +84,7 @@ namespace Game.Features.Spawn
                 totalChance += item.SpawnChance;
             }
 
-            float randomPoint = Random.value * totalChance;
+            float randomPoint = UnityEngine.Random.value * totalChance;
 
             float current = 0f;
             foreach (var item in config.SpawnDatas)
@@ -79,6 +97,11 @@ namespace Game.Features.Spawn
             }
 
             return new EntityModel(config.SpawnDatas[config.SpawnDatas.Count - 1].Value);
+        }
+
+        public void Dispose()
+        {
+            _bus.Unsubscribe<CreateMergedEntitySignal>(SpawnMergedCube);
         }
     }
 }

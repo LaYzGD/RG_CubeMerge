@@ -21,8 +21,14 @@ namespace Game.Infrastructure
             return obj;
         }
 
+        public override void Release(CubeView obj)
+        {
+            pool.Release(obj);
+        }
+
         protected override void OnGet(CubeView obj)
         {
+            obj.BindRelease(Release);
             obj.ResetState();
         }
     }

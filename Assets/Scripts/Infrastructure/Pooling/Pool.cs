@@ -3,7 +3,7 @@ using UnityEngine.Pool;
 
 namespace Game.Infrastructure
 {
-    public abstract class Pool<T> where T : MonoBehaviour
+    public abstract class Pool<T> where T : MonoBehaviour, IPoolable<T>
     {
         protected ObjectPool<T> pool;
 
@@ -26,9 +26,6 @@ namespace Game.Infrastructure
 
         protected abstract void OnGet(T obj);
 
-        public void Release(T obj) 
-        {
-            pool.Release(obj);
-        }
+        public abstract void Release(T obj);
     }
 }

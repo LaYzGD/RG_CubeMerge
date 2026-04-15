@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 177073a590e345341bdc0a5d2ff4d56d, type: 3}
   m_Name: GameConfig
   m_EditorClassIdentifier: 
-  <EntityViewPrefab>k__BackingField: {fileID: 0}
+  <CubeViewPrefab>k__BackingField: {fileID: 8561191913934479264, guid: e44265e078f1ee24d9f6c16d60ba7a37, type: 3}
   <SpawnConfig>k__BackingField: {fileID: 11400000, guid: 6afa2224a89a6b349a977ec43b3a0647, type: 2}
   <EntityConfig>k__BackingField: {fileID: 11400000, guid: 31a590bc50e831a4780b2d84d9373c7a, type: 2}
