@@ -3,6 +3,7 @@ namespace Game.Core
     public class EntityModel : IMergeable
     {
         public int Value { get; private set; }
+        public bool IsMerging { get; set; }
 
         public EntityModel(int value)
         {

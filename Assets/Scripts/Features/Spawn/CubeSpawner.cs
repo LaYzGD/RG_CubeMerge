@@ -7,35 +7,37 @@ using UnityEngine;
 
 namespace Game.Features.Spawn
 {
-    public class CubeSpawner : IEntitySpawnService<CubeView>, IDisposable
+    public class CubeSpawner : IEntitySpawnService, IDisposable
     {
         private CubeViewPool _pool;
-        private SpawnConfig _spawnConfig;
-        private EntityConfig _entityConfig;
+        private GameConfig _gameConfig;
         private SignalBus _bus;
+        private IEntitiesRegistry _entitiesRegistry;
         
-        public CubeSpawner(SignalBus bus, SpawnConfig spawnConfig, EntityConfig config, CubeView prefab) 
+        public CubeSpawner(SignalBus bus, GameConfig config, IEntitiesRegistry registry) 
         {
             _bus = bus;
-            _spawnConfig = spawnConfig;
-            _entityConfig = config;
-            _pool = new CubeViewPool(prefab);
+            _gameConfig = config;
+            _pool = new CubeViewPool(_gameConfig.CubeViewPrefab);
+            _entitiesRegistry = registry;
 
-            _bus.Subscribe<CreateMergedEntitySignal>(SpawnMergedCube);
+            _bus.Subscribe<MergeSignal>(SpawnMergedCube);
         }
 
-        public CubeView Spawn(Vector3 pos)
+        public EntityView Spawn(Vector3 pos)
         {
-            var view = GetViewAndBindModel(GetModel(_spawnConfig));
+            var view = GetViewAndBindModel(GetModel(_gameConfig.SpawnConfig));
             view.transform.position = pos;
-
+            view.ResetState();
             return view;
         }
 
-        private void SpawnMergedCube(CreateMergedEntitySignal signal)
+        private void SpawnMergedCube(MergeSignal signal)
         {
             var view = GetViewAndBindModel(new EntityModel(signal.Value));
+            _entitiesRegistry.Register(view);
             view.transform.position = signal.Position;
+            view.SetKinematic(false);
         }
 
         private CubeView GetViewAndBindModel(IMergeable model)
@@ -43,7 +45,7 @@ namespace Game.Features.Spawn
             var view = _pool.GetObject();
             view.Init(model);
             view.SetBus(_bus);
-            view.SetNewValue(new EntityData(model.Value, GetColor(_entityConfig, model.Value)));
+            view.SetNewValue(new EntityData(model.Value, GetColor(_gameConfig.EntityConfig, model.Value)));
 
             return view;
         }
@@ -101,7 +103,7 @@ namespace Game.Features.Spawn
 
         public void Dispose()
         {
-            _bus.Unsubscribe<CreateMergedEntitySignal>(SpawnMergedCube);
+            _bus.Unsubscribe<MergeSignal>(SpawnMergedCube);
         }
     }
 }

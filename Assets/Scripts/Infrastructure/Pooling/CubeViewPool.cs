@@ -29,7 +29,6 @@ namespace Game.Infrastructure
         protected override void OnGet(CubeView obj)
         {
             obj.BindRelease(Release);
-            obj.ResetState();
         }
     }
 }

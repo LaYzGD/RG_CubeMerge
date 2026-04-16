@@ -1,7 +1,6 @@
 using TMPro;
 using UnityEngine;
 using System;
-using Zenject;
 using Game.Signals;
 
 namespace Game.Core
@@ -35,7 +34,9 @@ namespace Game.Core
 
         public override void Launch(Vector3 force)
         {
-            _rb.AddForce(force, ForceMode.Impulse);
+            _bus.Invoke(new RegisterEntitySignal(this));
+            _rb.constraints = RigidbodyConstraints.None;
+            _rb.linearVelocity = force;
         }
 
         public override void SetNewValue(EntityData data)
@@ -54,7 +55,15 @@ namespace Game.Core
 
         public void ResetState()
         {
+            SetKinematic(false);
             _rb.linearVelocity = Vector3.zero;
+            _rb.rotation = Quaternion.Euler(0, 0, 0);
+            _rb.freezeRotation = true;
+        }
+
+        public override void SetKinematic(bool flag)
+        {
+            _rb.isKinematic = flag;
         }
 
         public void BindRelease(Action<CubeView> releaseAction) 
@@ -66,6 +75,8 @@ namespace Game.Core
         {
             if (collision.gameObject.TryGetComponent(out CubeView other))
             {
+                other.Model.IsMerging = true;
+                Model.IsMerging = true;
                 float impulse = collision.impulse.magnitude;
                 _bus.Invoke(new EntitiesCollisionSignal(this, other, impulse));
             }
@@ -74,6 +85,11 @@ namespace Game.Core
         public override void Release()
         {
             _releaseAction?.Invoke(this);
+        }
+
+        public override void Move(Vector3 pos)
+        {
+            _rb.MovePosition(pos);
         }
     }
 }

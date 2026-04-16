@@ -1,4 +1,6 @@
 using System;
+using DG.Tweening;
+using Game.Core;
 using Game.Signals;
 using UnityEngine;
 
@@ -8,10 +10,12 @@ namespace Game.Features
     {
         private SignalBus _bus;
         private float _impulseThreshold;
+        private IEntitiesRegistry _entitiesRegistry;
         
-        public MergeService(SignalBus bus, float impulse)
+        public MergeService(SignalBus bus, IEntitiesRegistry registry, float impulse)
         {
             _bus = bus;
+            _entitiesRegistry = registry;
             _bus.Subscribe<EntitiesCollisionSignal>(TryMerge);
             _impulseThreshold = impulse;
         }
@@ -19,6 +23,23 @@ namespace Game.Features
         public void Dispose()
         {
             _bus.Unsubscribe<EntitiesCollisionSignal>(TryMerge);
+        }
+
+        public void Merge(EntityView entityA, EntityView entityB)
+        {
+            Vector3 mergeResultPos = entityB.transform.position;
+            var mergeResultValue = entityB.Model.MergeResult();
+
+            _entitiesRegistry.Unregister(entityA);
+            _entitiesRegistry.Unregister(entityB);
+
+            entityA.transform.DOKill();
+            entityB.transform.DOKill();
+
+            entityA.Release();
+            entityB.Release();
+
+            _bus.Invoke(new MergeSignal(mergeResultPos, mergeResultValue));
         }
 
         public void TryMerge(EntitiesCollisionSignal signal)
@@ -31,16 +52,12 @@ namespace Game.Features
 
             if (!entityA.Model.CanMerge(entityB.Model) || impulse < _impulseThreshold)
             {
+                entityA.Model.IsMerging = false;
+                entityB.Model.IsMerging = false;
                 return;
             }
 
-            Vector3 mergeResultPos = entityB.transform.position;
-            var mergeResultValue = entityB.Model.MergeResult();
-
-            entityA.Release();
-            entityB.Release();
-
-            _bus.Invoke(new CreateMergedEntitySignal(mergeResultPos, mergeResultValue));
+            Merge(entityA, entityB);
         }
     }
 }

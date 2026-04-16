@@ -1,54 +1,74 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
 
 namespace Game.Signals
 {
     public class SignalBus
     {
-        private Dictionary<Type, List<Delegate>> _signalCallbacks = new Dictionary<Type, List<Delegate>>();
+        private readonly Dictionary<Type, object> _signalCallbacks = new(16);
 
-        public void Subscribe<T>(Action<T> callback, int priority = 0)
+        public void Subscribe<T>(Action<T> callback)
         {
-            Type key = typeof(T);
+            if (callback == null) return;
 
-            if (_signalCallbacks.ContainsKey(key))
+            var key = typeof(T);
+
+            if (!_signalCallbacks.TryGetValue(key, out var obj))
             {
-                _signalCallbacks[key].Add(callback);
+                var list = new List<Action<T>>(4);
+                list.Add(callback);
+                _signalCallbacks.Add(key, list);
                 return;
             }
 
-            _signalCallbacks.Add(key, new List<Delegate>() { callback });
+            ((List<Action<T>>)obj).Add(callback);
         }
 
         public void Invoke<T>(T signal)
         {
-            Type key = typeof(T);
-            if (_signalCallbacks.ContainsKey(key))
+            var key = typeof(T);
+
+            if (!_signalCallbacks.TryGetValue(key, out var obj))
+                return;
+
+            var list = (List<Action<T>>)obj;
+
+            for (int i = 0; i < list.Count; i++)
             {
-                foreach (var obj in _signalCallbacks[key])
-                {
-                    var callback = obj as Action<T>;
-                    callback?.Invoke(signal);
-                }
+                list[i](signal);
             }
         }
 
         public void Unsubscribe<T>(Action<T> callback)
         {
-            Type key = typeof(T);
-            if (_signalCallbacks.ContainsKey(key))
+            if (callback == null) return;
+
+            var key = typeof(T);
+
+            if (!_signalCallbacks.TryGetValue(key, out var obj))
             {
-                var callbackToDelete = _signalCallbacks[key].FirstOrDefault(x => x.Equals(callback));
-                if (callbackToDelete != null)
-                {
-                    _signalCallbacks[key].Remove(callbackToDelete);
-                }
+                Debug.LogError($"Trying to unsubscribe for not existing key! {key}");
                 return;
             }
 
-            Debug.LogErrorFormat("Trying to unsubscribe for not existing key! {0} ", key);
+            var list = (List<Action<T>>)obj;
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                if (list[i] == callback)
+                {
+                    int last = list.Count - 1;
+                    list[i] = list[last];
+                    list.RemoveAt(last);
+                    break;
+                }
+            }
+
+            if (list.Count == 0)
+            {
+                _signalCallbacks.Remove(key);
+            }
         }
     }
 }

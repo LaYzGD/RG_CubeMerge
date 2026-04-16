@@ -1,4 +1,3 @@
-using Game.Signals;
 using UnityEngine;
 
 namespace Game.Core
@@ -10,5 +9,7 @@ namespace Game.Core
         public abstract void SetNewValue(EntityData data);
         public abstract void Launch(Vector3 force);
         public abstract void Release();
+        public abstract void Move(Vector3 pos);
+        public abstract void SetKinematic(bool flag);
     }
 }
