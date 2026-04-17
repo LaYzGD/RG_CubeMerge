@@ -6,11 +6,12 @@ namespace Game.Infrastructure
     public abstract class Pool<T> where T : MonoBehaviour, IPoolable<T>
     {
         protected ObjectPool<T> pool;
+        protected T prefab;
 
-        public Pool(T prefab, int defaultCapacity = 30)
+        public Pool(int defaultCapacity = 30)
         {
             pool = new ObjectPool<T>(() =>
-                Object.Instantiate(prefab),
+                Instantiate(),
                 (ent) =>
                 {
                     ent.gameObject.SetActive(true);
@@ -21,6 +22,8 @@ namespace Game.Infrastructure
                 false,
                 defaultCapacity);
         }
+
+        protected abstract T Instantiate();
 
         public abstract T GetObject();
 

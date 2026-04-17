@@ -14,11 +14,11 @@ namespace Game.Features.Spawn
         private SignalBus _bus;
         private IEntitiesRegistry _entitiesRegistry;
         
-        public CubeSpawner(SignalBus bus, GameConfig config, IEntitiesRegistry registry) 
+        public CubeSpawner(SignalBus bus, GameConfig config, IEntitiesRegistry registry, CubeViewPool pool) 
         {
             _bus = bus;
             _gameConfig = config;
-            _pool = new CubeViewPool(_gameConfig.CubeViewPrefab);
+            _pool = pool;
             _entitiesRegistry = registry;
 
             _bus.Subscribe<MergeSignal>(SpawnMergedCube);
@@ -27,24 +27,24 @@ namespace Game.Features.Spawn
         public EntityView Spawn(Vector3 pos)
         {
             var view = GetViewAndBindModel(GetModel(_gameConfig.SpawnConfig));
-            view.transform.position = pos;
             view.ResetState();
+            view.transform.position = pos;
             return view;
         }
 
         private void SpawnMergedCube(MergeSignal signal)
         {
             var view = GetViewAndBindModel(new EntityModel(signal.Value));
-            _entitiesRegistry.Register(view);
             view.transform.position = signal.Position;
             view.SetKinematic(false);
+            view.SetMerged();
         }
 
         private CubeView GetViewAndBindModel(IMergeable model)
         {
             var view = _pool.GetObject();
             view.Init(model);
-            view.SetBus(_bus);
+            _entitiesRegistry.Register(view);
             view.SetNewValue(new EntityData(model.Value, GetColor(_gameConfig.EntityConfig, model.Value)));
 
             return view;
@@ -68,7 +68,7 @@ namespace Game.Features.Spawn
         {
             int index = 0;
 
-            while (value > 1)
+            while (value > 2)
             {
                 value >>= 1;
                 index++;

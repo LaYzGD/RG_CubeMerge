@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Game.Signals;
 
 namespace Game.Core
@@ -34,10 +33,28 @@ namespace Game.Core
             foreach (var pair in _registry)
             {
                 var list = pair.Value;
+                if (list == null || list.Count == 0)
+                    continue;
 
-                if (list != null && list.Count >= entitiesAmount)
+                int validCount = 0;
+
+                for (int i = 0; i < list.Count; i++)
                 {
-                    result.Add(pair.Key);
+                    var entity = list[i];
+
+                    if (entity == null)
+                        continue;
+
+                    if (entity.EntityFSM.CurrentState is EntityIdleState)
+                    {
+                        validCount++;
+
+                        if (validCount >= entitiesAmount)
+                        {
+                            result.Add(pair.Key);
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -47,7 +64,7 @@ namespace Game.Core
         public void Register(EntityView entity)
         {
             if (entity == null) return;
-
+            
             int key = entity.Model.Value;
 
             if (!_registry.TryGetValue(key, out var list))

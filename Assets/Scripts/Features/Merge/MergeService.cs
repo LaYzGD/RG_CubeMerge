@@ -4,7 +4,7 @@ using Game.Core;
 using Game.Signals;
 using UnityEngine;
 
-namespace Game.Features
+namespace Game.Features.Merge
 {
     public class MergeService : IMergeService, IDisposable
     {
@@ -47,6 +47,7 @@ namespace Game.Features
             var entityA = signal.A;
             var entityB = signal.B;
             float impulse = signal.Impulse;
+            Vector3 particlesPos = entityB.transform.position;
 
             if (entityA == null || entityB == null) return;
 
@@ -58,6 +59,7 @@ namespace Game.Features
             }
 
             Merge(entityA, entityB);
+            _bus.Invoke(new CreateVFXSignal(Systems.VFX.VFXType.Merge, particlesPos));
         }
     }
 }

@@ -5,6 +5,9 @@ namespace Game.Core
         public int Value { get; private set; }
         public bool IsMerging { get; set; }
 
+        private const float _forceAfterMerge = 140f;
+        public float ForceAfterMerge => _forceAfterMerge;
+
         public EntityModel(int value)
         {
             Value = value;

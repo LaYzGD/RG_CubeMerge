@@ -16,6 +16,10 @@ MonoBehaviour:
   <ClampX>k__BackingField: 2
   <LaunchForce>k__BackingField: 25
   <ImpulseThreshold>k__BackingField: 1
+  <GameOverCollisionTime>k__BackingField: 1.5
   <CubeViewPrefab>k__BackingField: {fileID: 8561191913934479264, guid: e44265e078f1ee24d9f6c16d60ba7a37, type: 3}
   <SpawnConfig>k__BackingField: {fileID: 11400000, guid: 6afa2224a89a6b349a977ec43b3a0647, type: 2}
   <EntityConfig>k__BackingField: {fileID: 11400000, guid: 31a590bc50e831a4780b2d84d9373c7a, type: 2}
+  <AutoMergeConfig>k__BackingField: {fileID: 11400000, guid: 0373eb7a4e3e9c54c86d7d85104d1ee9, type: 2}
+  <EntityStatesConfig>k__BackingField: {fileID: 11400000, guid: f831e6b4f8c74c64797174d44f370cdf, type: 2}
+  <VFXConfig>k__BackingField: {fileID: 11400000, guid: 8c59ab44f3b1daf43a963f634f14e651, type: 2}

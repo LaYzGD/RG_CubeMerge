@@ -1,12 +1,17 @@
+using Game.Configs;
 using Game.Core;
 using UnityEngine;
+using Zenject;
 
 namespace Game.Infrastructure
 {
     public class CubeViewPool : Pool<CubeView>
     {
-        public CubeViewPool(CubeView prefab, int defaultCapacity = 30) : base(prefab, defaultCapacity)
+        private readonly DiContainer _container;
+        public CubeViewPool(DiContainer container, GameConfig config, int defaultCapacity = 30) : base(defaultCapacity)
         {
+            _container = container;
+            prefab = config.CubeViewPrefab;
         }
 
         public override CubeView GetObject()
@@ -24,6 +29,11 @@ namespace Game.Infrastructure
         public override void Release(CubeView obj)
         {
             pool.Release(obj);
+        }
+
+        protected override CubeView Instantiate()
+        {
+            return _container.InstantiatePrefabForComponent<CubeView>(prefab);
         }
 
         protected override void OnGet(CubeView obj)

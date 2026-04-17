@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 namespace Game.Systems.Input
 {
@@ -10,27 +11,77 @@ namespace Game.Systems.Input
         public event Action OnRelease;
         public event Action<Vector2> OnDrag;
 
+        private bool _pressed;
+        private Vector2 _lastDelta;
+        private bool _releaseRequested;
+
         public void CheckPress(InputAction.CallbackContext ctx)
         {
             if (ctx.started)
             {
-                OnPress?.Invoke();
-                return;
+                _pressed = true;
             }
 
             if (ctx.canceled)
             {
-                OnRelease?.Invoke();
+                _releaseRequested = true;
+                _pressed = false;
             }
         }
 
         public void CheckDelta(InputAction.CallbackContext ctx)
         {
-            if (ctx.performed)
+            if (!ctx.performed)
+                return;
+
+            _lastDelta = ctx.ReadValue<Vector2>();
+        }
+
+        private void Update()
+        {
+            if (IsPointerOverUI())
             {
-                Vector2 delta = ctx.ReadValue<Vector2>();
-                OnDrag?.Invoke(delta);
+                ResetFrameInput();
+                return;
             }
+
+            if (_pressed)
+            {
+                OnPress?.Invoke();
+                _pressed = false;
+            }
+
+            if (_lastDelta != Vector2.zero)
+            {
+                OnDrag?.Invoke(_lastDelta);
+                _lastDelta = Vector2.zero;
+            }
+
+            if (_releaseRequested)
+            {
+                OnRelease?.Invoke();
+                _releaseRequested = false;
+            }
+        }
+
+        private void ResetFrameInput()
+        {
+            _pressed = false;
+            _lastDelta = Vector2.zero;
+            _releaseRequested = false;
+        }
+
+        private bool IsPointerOverUI()
+        {
+#if UNITY_EDITOR
+            return EventSystem.current != null &&
+                   EventSystem.current.IsPointerOverGameObject();
+#else
+    if (Input.touchCount > 0)
+        return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+
+    return false;
+#endif
         }
     }
 }

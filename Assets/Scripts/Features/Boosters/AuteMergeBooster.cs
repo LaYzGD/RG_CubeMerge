@@ -1,8 +1,9 @@
-using System;
 using Cysharp.Threading.Tasks;
 using DG.Tweening;
 using Game.Configs;
 using Game.Core;
+using Game.Features.Merge;
+using Game.Signals;
 using UnityEngine;
 
 namespace Game.Features.Boosters
@@ -12,11 +13,13 @@ namespace Game.Features.Boosters
         private IEntitiesRegistry _entitiesRegistry;
         private IMergeService _mergeService;
         private AutoMergeConfig _config;
+        private SignalBus _bus;
 
         private const int _objectsToMergeAmount = 2;
 
-        public AutoMergeBooster(IEntitiesRegistry registry, IMergeService mergeService, GameConfig config)
+        public AutoMergeBooster(SignalBus bus, IEntitiesRegistry registry, IMergeService mergeService, GameConfig config)
         {
+            _bus = bus;
             _entitiesRegistry = registry;
             _mergeService = mergeService;
             _config = config.AutoMergeConfig;
@@ -46,11 +49,19 @@ namespace Game.Features.Boosters
                 return;
             }
 
+            entityA.Model.IsMerging = true;
+            entityB.Model.IsMerging = true;
+
+            entityA.SetAutoMerging();
+            entityB.SetAutoMerging();
+
             await AnimateLift(entityA, entityB);
             await AnimateSwing(entityA, entityB);
             await AnimateMerge(entityA, entityB);
 
             _mergeService.Merge(entityA, entityB);
+
+            await UniTask.Delay(1000);
         }
 
         private async UniTask AnimateLift(EntityView entityA, EntityView entityB)
@@ -68,9 +79,6 @@ namespace Game.Features.Boosters
 
             seq.Join(entityB.transform.DOMoveY(entityB.transform.position.y + height, duration)
                 .SetEase(Ease.OutQuad));
-
-            seq.Join(entityA.transform.DOScale(1.1f, duration));
-            seq.Join(entityB.transform.DOScale(1.1f, duration));
 
             await seq.AsyncWaitForCompletion().AsUniTask();
         }
@@ -107,12 +115,8 @@ namespace Game.Features.Boosters
             seq.Join(entityB.transform.DOMove(center, duration)
                 .SetEase(Ease.InBack));
 
-            // scale punch
-            seq.Join(entityA.transform.DOScale(0.8f, duration));
-            seq.Join(entityB.transform.DOScale(0.8f, duration));
-
             await seq.AsyncWaitForCompletion().AsUniTask();
-            //await _vfx.PlayMergeEffect(center);
+            _bus.Invoke(new CreateVFXSignal(Systems.VFX.VFXType.AutoMerge, center));
         }
     }
 }

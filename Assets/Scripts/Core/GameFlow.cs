@@ -1,10 +1,13 @@
 ﻿using UnityEngine;
-using Game.Features;
 using Game.Systems.Input;
 using Game.Configs;
 using System;
 using Cysharp.Threading.Tasks;
 using System.Threading;
+using Game.Features.Spawn;
+using Game.Features;
+using Game.Signals;
+using Game.Features.Score;
 
 namespace Game.Core
 {
@@ -14,31 +17,34 @@ namespace Game.Core
         private IEntitySpawnService _entitySpawnService;
         private EntityView _currentObject;
         private GameConfig _gameConfig;
+        private IGameOverService _gameOverHandler;
         private Camera _mainCam;
         private Vector3 _spawnPoint;
-
+        private IScoreService _scoreService;
+        private SignalBus _bus;
         private bool _isPressed = false;
 
         private CancellationTokenSource _cts;
 
-        public GameFlow(IInputService inputs, IEntitySpawnService spawnService, GameConfig config)
+        public GameFlow(SignalBus bus, IInputService inputs, IEntitySpawnService spawnService, IScoreService score, 
+            GameConfig config, IGameOverService gameOverHandler, Vector3 spawnPoint)
         {
+            _bus = bus;
             _inputService = inputs;
             _entitySpawnService = spawnService;
             _gameConfig = config;
-
+            _gameOverHandler = gameOverHandler;
+            _scoreService = score;
+            _spawnPoint = spawnPoint;
             _inputService.OnPress += OnPress;
             _inputService.OnDrag += MoveCurrentEntity;
             _inputService.OnRelease += LaunchCurrentEntity;
             _mainCam = Camera.main;
+
+            StartGame();
         }
 
-        public void SetDefaultSpawnPoint(Vector3 spawnPoint)
-        {
-            _spawnPoint = spawnPoint;
-        }
-
-        public void StartGame()
+        private void StartGame()
         {
             _cts = new CancellationTokenSource();
             Run(_cts.Token).Forget();
@@ -47,8 +53,6 @@ namespace Game.Core
         private void SpawnNewEntity(Vector3 pos)
         {
             var obj = _entitySpawnService.Spawn(pos);
-            //animate obj
-            //rise on object created signal
             _currentObject = obj;
         }
 
@@ -56,10 +60,24 @@ namespace Game.Core
         {
             while (!token.IsCancellationRequested)
             {
+                if (CheckGameOver())
+                    break;
+
                 SpawnNewEntity(_spawnPoint);
+
                 await WaitUntilLaunched(token);
+
                 await UniTask.Delay(800, cancellationToken: token);
             }
+        }
+
+        private bool CheckGameOver()
+        {
+            if (!_gameOverHandler.IsGameOver())
+                return false;
+
+            _bus.Invoke(new GameOverSignal(_scoreService.CurrentScore));
+            return true;
         }
 
         private async UniTask WaitUntilLaunched(CancellationToken token)
@@ -69,12 +87,6 @@ namespace Game.Core
 
         private void OnPress()
         {
-            if (_currentObject == null)
-            {
-                _isPressed = false;
-                return;
-            }
-
             _isPressed = true;
         }
 
