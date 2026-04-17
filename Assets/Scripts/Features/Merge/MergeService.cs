@@ -60,6 +60,7 @@ namespace Game.Features.Merge
 
             Merge(entityA, entityB);
             _bus.Invoke(new CreateVFXSignal(Systems.VFX.VFXType.Merge, particlesPos));
+            _bus.Invoke(new PlaySoundSignal(Systems.Audio.SoundType.Merge));
         }
     }
 }

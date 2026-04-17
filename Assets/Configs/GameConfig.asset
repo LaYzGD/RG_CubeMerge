@@ -23,3 +23,4 @@ MonoBehaviour:
   <AutoMergeConfig>k__BackingField: {fileID: 11400000, guid: 0373eb7a4e3e9c54c86d7d85104d1ee9, type: 2}
   <EntityStatesConfig>k__BackingField: {fileID: 11400000, guid: f831e6b4f8c74c64797174d44f370cdf, type: 2}
   <VFXConfig>k__BackingField: {fileID: 11400000, guid: 8c59ab44f3b1daf43a963f634f14e651, type: 2}
+  <AudioConfig>k__BackingField: {fileID: 11400000, guid: deeede3eaade0444e83a7af2d53e0761, type: 2}

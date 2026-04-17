@@ -117,6 +117,7 @@ namespace Game.Features.Boosters
 
             await seq.AsyncWaitForCompletion().AsUniTask();
             _bus.Invoke(new CreateVFXSignal(Systems.VFX.VFXType.AutoMerge, center));
+            _bus.Invoke(new PlaySoundSignal(Systems.Audio.SoundType.AutoMerge));
         }
     }
 }

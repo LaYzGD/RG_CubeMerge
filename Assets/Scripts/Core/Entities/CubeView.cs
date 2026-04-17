@@ -48,6 +48,7 @@ namespace Game.Core
 
         public override void Launch(Vector3 force)
         {
+            _bus.Invoke(new PlaySoundSignal(Systems.Audio.SoundType.PopUp));
             _rb.linearVelocity = force;
             _trail.Play();
             _fsm.ChangeState(new EntityMovingState(_fsm, _stateContext));

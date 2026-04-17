@@ -116,8 +116,8 @@ namespace Game.Core
             }
 
             _currentObject.Launch(Vector3.forward * _gameConfig.LaunchForce);
-            _currentObject = null;
             _isPressed = false;
+            _currentObject = null;
         }
 
         public void Dispose()

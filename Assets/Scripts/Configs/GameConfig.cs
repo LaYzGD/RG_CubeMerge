@@ -17,5 +17,6 @@ namespace Game.Configs
         [field: SerializeField] public AutoMergeConfig AutoMergeConfig { get; private set; }
         [field: SerializeField] public EntityStatesConfig EntityStatesConfig { get; private set; }
         [field: SerializeField] public VFXConfig VFXConfig { get; private set; }
+        [field: SerializeField] public AudioConfig AudioConfig { get; private set; }
     }
 }
