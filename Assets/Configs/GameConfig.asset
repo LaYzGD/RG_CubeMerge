@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 177073a590e345341bdc0a5d2ff4d56d, type: 3}
   m_Name: GameConfig
   m_EditorClassIdentifier: 
-  <Sensitivity>k__BackingField: 2
+  <Sensitivity>k__BackingField: 4
   <ClampX>k__BackingField: 2
   <LaunchForce>k__BackingField: 25
   <ImpulseThreshold>k__BackingField: 1

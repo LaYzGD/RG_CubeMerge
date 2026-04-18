@@ -23,7 +23,8 @@ namespace Game.Core
         private IScoreService _scoreService;
         private SignalBus _bus;
         private bool _isPressed = false;
-
+        private Plane _dragPlane;
+        private bool _planeInitialized;
         private CancellationTokenSource _cts;
 
         public GameFlow(SignalBus bus, IInputService inputs, IEntitySpawnService spawnService, IScoreService score, 
@@ -88,6 +89,7 @@ namespace Game.Core
         private void OnPress()
         {
             _isPressed = true;
+            _planeInitialized = false;
         }
 
         private void MoveCurrentEntity(Vector2 delta)
@@ -95,17 +97,35 @@ namespace Game.Core
             if (_currentObject == null || !_isPressed)
                 return;
 
-            Vector3 currentPos = _currentObject.transform.position;
+            if (!_planeInitialized)
+            {
+                _dragPlane = new Plane(Vector3.up, _currentObject.transform.position);
 
-            Vector3 screenPos = _mainCam.WorldToScreenPoint(currentPos);
-            screenPos.x += delta.x * _gameConfig.Sensitivity;
+                Vector2 screenPos = UnityEngine.InputSystem.Pointer.current.position.ReadValue();
+                Ray ray = _mainCam.ScreenPointToRay(screenPos);
 
-            Vector3 newPos = _mainCam.ScreenToWorldPoint(screenPos);
-            newPos.y = currentPos.y;
-            newPos.z = currentPos.z;
-            newPos.x = Mathf.Clamp(newPos.x, -_gameConfig.ClampX, _gameConfig.ClampX);
+                if (_dragPlane.Raycast(ray, out float enter))
+                {
+                    var world = ray.GetPoint(enter);
+                }
 
-            _currentObject.Move(newPos);
+                _planeInitialized = true;
+            }
+
+            Vector2 pointer = UnityEngine.InputSystem.Pointer.current.position.ReadValue();
+            Ray moveRay = _mainCam.ScreenPointToRay(pointer);
+
+            if (_dragPlane.Raycast(moveRay, out float moveEnter))
+            {
+                Vector3 world = moveRay.GetPoint(moveEnter);
+
+                float targetX = world.x;
+
+                Vector3 pos = _currentObject.transform.position;
+                pos.x = Mathf.Clamp(targetX, -_gameConfig.ClampX, _gameConfig.ClampX);
+
+                _currentObject.Move(pos);
+            }
         }
 
         private void LaunchCurrentEntity()
@@ -117,6 +137,7 @@ namespace Game.Core
 
             _currentObject.Launch(Vector3.forward * _gameConfig.LaunchForce);
             _isPressed = false;
+            _planeInitialized = false;
             _currentObject = null;
         }
 

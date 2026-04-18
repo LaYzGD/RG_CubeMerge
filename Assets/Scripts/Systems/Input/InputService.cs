@@ -73,15 +73,15 @@ namespace Game.Systems.Input
 
         private bool IsPointerOverUI()
         {
-#if UNITY_EDITOR
-            return EventSystem.current != null &&
-                   EventSystem.current.IsPointerOverGameObject();
-#else
-    if (Input.touchCount > 0)
-        return EventSystem.current.IsPointerOverGameObject(Input.GetTouch(0).fingerId);
+            if (EventSystem.current == null)
+                return false;
 
-    return false;
-#endif
+            if (Pointer.current != null)
+            {
+                return EventSystem.current.IsPointerOverGameObject(Pointer.current.deviceId);
+            }
+
+            return false;
         }
     }
 }
